@@ -1,3 +1,5 @@
+from collections import defaultdict as dd
+
 ROWS = [[ 0,  1,  2,  3,  4,  5,  6,  7,  8], 
         [ 9, 10, 11, 12, 13, 14, 15, 16, 17], 
         [18, 19, 20, 21, 22, 23, 24, 25, 26], 
@@ -41,6 +43,9 @@ def calc_possible(puzzle, methods = None):
 
     if 'hidden_singles' in methods:
         possible = hidden_singles(puzzle, possible)
+    
+    if 'naked_pairs' in methods:
+        possible = naked_pairs(puzzle, possible)
 
     return possible
 
@@ -77,13 +82,37 @@ def hidden_singles(puzzle, possible):
 
     for combo in COMBOS:
 
-        for j in TARGET:
+        for i in TARGET:
             
             # find cells each target number can be in
-            spots = [i for i in combo if puzzle[i] == 0 and j in possible[i]]
+            spots = [j for j in combo if puzzle[j] == 0 and i in possible[j]]
 
             # find if target number can only be in one cell
             if len(spots) == 1:
-                possible[spots[0]] = [j]
+                possible[spots[0]] = [i]
                 
+    return possible
+
+# naked pairs: take every combo and find candidate pairs, then remove those values from other cells in same row, col, sqr
+def naked_pairs(puzzle, possible):
+
+    for combo in COMBOS:
+
+        # find cells with two possible numbers
+        pair_map = dd(list)
+        for i in combo:
+            if len(possible[i]) == 2:
+                pair_map[tuple(sorted(possible[i]))].append(i)
+
+        # find a pair of these numbers
+        for pair, cells in pair_map.items():
+            if len(cells) == 2:
+
+                # remove pair from all other cells in the combo
+                for i in combo:
+                    if i in cells or puzzle[i] != 0:
+                        continue
+                    else:
+                        possible[i] = [j for j in possible[i] if j not in pair]
+
     return possible

@@ -12,7 +12,6 @@ def print_puzzle(puzzle):
         else:
             print(f' {puzzle[i]}', end = '')
         
-
         # dividers
         if (i + 1) % 9 == 0:
             print('\n', end = '')
@@ -74,4 +73,4 @@ with open('puzzle2.csv', 'r') as f:
     puzzle = list(csv.reader(f))[0]
     puzzle = list(map(int, puzzle))
 
-solve(puzzle, methods = ['naked_singles', 'hidden_singles'])
+solve(puzzle, methods = ['naked_singles', 'hidden_singles', 'naked_pairs'])
