@@ -20,7 +20,7 @@ COLS = [[ 0,  9, 18, 27, 36, 45, 54, 63, 72],
         [ 7, 16, 25, 34, 43, 52, 61, 70, 79], 
         [ 8, 17, 26, 35, 44, 53, 62, 71, 80]]
 
-SQRS = [[ 0,  1,  2,  9, 10, 11, 18, 19, 20], 
+BOXS = [[ 0,  1,  2,  9, 10, 11, 18, 19, 20], 
         [ 3,  4,  5, 12, 13, 14, 21, 22, 23], 
         [ 6,  7,  8, 15, 16, 17, 24, 25, 26], 
         [27, 28, 29, 36, 37, 38, 45, 46, 47], 
@@ -30,7 +30,7 @@ SQRS = [[ 0,  1,  2,  9, 10, 11, 18, 19, 20],
         [57, 58, 59, 66, 67, 68, 75, 76, 77], 
         [60, 61, 62, 69, 70, 71, 78, 79, 80]]
 
-COMBOS = ROWS + COLS + SQRS
+COMBOS = ROWS + COLS + BOXS
 
 TARGET = {1, 2, 3, 4, 5, 6, 7, 8, 9}
 
@@ -40,16 +40,23 @@ def calc_possible(puzzle, methods = None):
     if methods == None:
         methods = ['naked_singles']
     possible = naked_singles(puzzle)
-
-    if 'hidden_singles' in methods:
-        possible = hidden_singles(puzzle, possible)
     
-    if 'naked_pairs' in methods:
-        possible = naked_pairs(puzzle, possible)
+    # inner looping until no change
+    prev = None
+    while prev != possible:
+        prev = [list(i) for i in possible]
+        if 'hidden_singles' in methods:
+            possible = hidden_singles(puzzle, possible)
+        
+        if 'naked_pairs' in methods:
+            possible = naked_pairs(puzzle, possible)
+
+        if 'hidden_pairs' in methods:
+            possible = hidden_pairs(puzzle, possible)
 
     return possible
 
-# naked singles: take every cell and check for all numbers in its row, col, sqr, the cell number cannot be any of these
+# naked singles: take every cell and check for all numbers in its row, col, box, the cell number cannot be any of these
 def naked_singles(puzzle):
 
     possible = [None] * 81
@@ -61,16 +68,16 @@ def naked_singles(puzzle):
             possible[i] = [puzzle[i]]
             continue
         
-        # calculate row, col, sqr the cell belongs to
+        # calculate row, col, box the cell belongs to
         r = i // 9
         c = i % 9
-        s = (r // 3) * 3 + (c // 3)
+        b = (r // 3) * 3 + (c // 3)
 
-        # find all numbers that already exist in row, col, sqr
+        # find all numbers that already exist in row, col, box
         used = set()
         used.update(puzzle[j] for j in ROWS[r])
         used.update(puzzle[j] for j in COLS[c])
-        used.update(puzzle[j] for j in SQRS[s])
+        used.update(puzzle[j] for j in BOXS[b])
         used.discard(0)
 
         possible[i] = [k for k in TARGET if k not in used]
@@ -93,7 +100,7 @@ def hidden_singles(puzzle, possible):
                 
     return possible
 
-# naked pairs: take every combo and find candidate pairs, then remove those values from other cells in same row, col, sqr
+# naked pairs: take every combo and find candidate pairs, then remove those values from other cells in same row, col, box
 def naked_pairs(puzzle, possible):
 
     for combo in COMBOS:
@@ -114,5 +121,10 @@ def naked_pairs(puzzle, possible):
                         continue
                     else:
                         possible[i] = [j for j in possible[i] if j not in pair]
+
+    return possible
+
+# hidden pairs: 
+def hidden_pairs(puzzle, possible):
 
     return possible

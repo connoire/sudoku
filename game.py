@@ -1,5 +1,5 @@
 import csv
-from possible import ROWS, COLS, SQRS, COMBOS, TARGET, calc_possible
+from possible import ROWS, COLS, BOXS, COMBOS, TARGET, calc_possible
 
 # function to print puzzle
 def print_puzzle(puzzle):
@@ -69,8 +69,8 @@ def solve(puzzle, methods):
         iter += 1
 
 # open puzzle and solve
-with open('puzzle2.csv', 'r') as f:
+with open('puzzle3.csv', 'r') as f:
     puzzle = list(csv.reader(f))[0]
     puzzle = list(map(int, puzzle))
 
-solve(puzzle, methods = ['naked_singles', 'hidden_singles', 'naked_pairs'])
+solve(puzzle, methods = ['naked_singles', 'hidden_singles', 'naked_pairs', 'hidden pairs'])
