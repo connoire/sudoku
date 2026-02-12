@@ -42,35 +42,36 @@ def is_solved(puzzle):
 def solve(puzzle, methods):
 
     print_puzzle(puzzle)
-    iter = 1
+    iteration = 1
     prev = None
+    possible = None
 
     # keep iterating until puzzle is solved
     while not is_solved(puzzle):
 
-        print(f'Iteration {iter}\n', end = '')
+        print(f'Iteration {iteration}\n', end = '')
 
         # calc possible values for each cell
-        possible = calc_possible(puzzle, methods)
+        possible = calc_possible(puzzle, methods, possible)
 
         # if cell only has one possible option, then update
         for i in range(81):
             if len(possible[i]) == 1:
-                puzzle[i] = possible[i][0]
+                puzzle[i] = next(iter(possible[i]))
         
-        # check if the puzzle changed after this iteration
-        if prev == possible:
+        # check if puzzle changed after this iteration
+        if prev is not None and all(prev[i] == possible[i] for i in range(81)):
             print('Unsolvable from here')
             break
         else:
             print_puzzle(puzzle)
 
-        prev = possible        
-        iter += 1
+        prev = [set(s) for s in possible]        
+        iteration += 1
 
 # open puzzle and solve
 with open('puzzle3.csv', 'r') as f:
     puzzle = list(csv.reader(f))[0]
     puzzle = list(map(int, puzzle))
 
-solve(puzzle, methods = ['naked_singles', 'hidden_singles', 'naked_pairs', 'hidden pairs'])
+solve(puzzle, methods = ['naked_singles', 'hidden_singles', 'naked_pairs', 'hidden_pairs'])

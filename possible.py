@@ -35,37 +35,33 @@ COMBOS = ROWS + COLS + BOXS
 TARGET = {1, 2, 3, 4, 5, 6, 7, 8, 9}
 
 # calculate what numbers are possible in each cell, with user input method choices
-def calc_possible(puzzle, methods = None):
+def calc_possible(puzzle, methods, possible):
 
-    if methods == None:
-        methods = ['naked_singles']
-    possible = naked_singles(puzzle)
+    if 'naked_singles' in methods:
+        possible = naked_singles(puzzle, possible)
+
+    if 'hidden_singles' in methods:
+        possible = hidden_singles(puzzle, possible)
     
-    # inner looping until no change
-    prev = None
-    while prev != possible:
-        prev = [list(i) for i in possible]
-        if 'hidden_singles' in methods:
-            possible = hidden_singles(puzzle, possible)
-        
-        if 'naked_pairs' in methods:
-            possible = naked_pairs(puzzle, possible)
+    if 'naked_pairs' in methods:
+        possible = naked_pairs(puzzle, possible)
 
-        if 'hidden_pairs' in methods:
-            possible = hidden_pairs(puzzle, possible)
+    if 'hidden_pairs' in methods:
+        possible = hidden_pairs(puzzle, possible)
 
     return possible
 
 # naked singles: take every cell and check for all numbers in its row, col, box, the cell number cannot be any of these
-def naked_singles(puzzle):
+def naked_singles(puzzle, possible):
 
-    possible = [None] * 81
+    if possible == None:
+        possible = [None] * 81
 
     for i in range(81):
         
         # check if already solved
         if puzzle[i] != 0:
-            possible[i] = [puzzle[i]]
+            possible[i] = {puzzle[i]}
             continue
         
         # calculate row, col, box the cell belongs to
@@ -80,7 +76,13 @@ def naked_singles(puzzle):
         used.update(puzzle[j] for j in BOXS[b])
         used.discard(0)
 
-        possible[i] = [k for k in TARGET if k not in used]
+        # on first iteration remove from all possible numbers
+        if possible[i] is None:
+            possible[i] = TARGET - used
+
+        # otherwise remove from already existing list
+        else:
+            possible[i] = possible[i] - used
     
     return possible
 
@@ -96,7 +98,7 @@ def hidden_singles(puzzle, possible):
 
             # find if target number can only be in one cell
             if len(spots) == 1:
-                possible[spots[0]] = [i]
+                possible[spots[0]] = {i}
                 
     return possible
 
@@ -120,11 +122,32 @@ def naked_pairs(puzzle, possible):
                     if i in cells or puzzle[i] != 0:
                         continue
                     else:
-                        possible[i] = [j for j in possible[i] if j not in pair]
+                        possible[i] = possible[i] - set(pair)
 
     return possible
 
-# hidden pairs: 
+# hidden pairs: take every combo and find a pair that can only be in the same two cells, then remove all other values from those cells
 def hidden_pairs(puzzle, possible):
+
+    for combo in COMBOS:
+
+        # find what cells each number can be in
+        value_map = {i: [j for j in combo if puzzle[j] == 0 and i in possible[j]] for i in TARGET}
+
+        # check every pair of numbers
+        for i in range(1, 10):
+            for j in range(i + 1, 10):
+                cells_1 = value_map[i]
+                cells_2 = value_map[j]
+
+                # check if it is a hidden pair
+                if cells_1 == cells_2 and len(cells_1) == 2:
+                    pair_cells = cells_1
+                    pair = {i, j}
+
+                    # remove all other numbers from the pair cells
+                    for cell in pair_cells:
+                        if possible[cell] != pair:
+                            possible[cell] = pair
 
     return possible
