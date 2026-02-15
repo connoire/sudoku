@@ -62,6 +62,7 @@ def solve(puzzle, methods):
         # check if puzzle changed after this iteration
         if prev is not None and all(prev[i] == possible[i] for i in range(81)):
             print('Unsolvable from here')
+            print(possible)
             break
         else:
             print_puzzle(puzzle)
@@ -70,8 +71,8 @@ def solve(puzzle, methods):
         iteration += 1
 
 # open puzzle and solve
-with open('puzzle3.csv', 'r') as f:
+with open('puzzle12.csv', 'r') as f:
     puzzle = list(csv.reader(f))[0]
     puzzle = list(map(int, puzzle))
 
-solve(puzzle, methods = ['naked_singles', 'hidden_singles', 'naked_pairs', 'hidden_pairs'])
+solve(puzzle, methods = ['naked_singles', 'hidden_singles', 'naked_pairs', 'hidden_pairs', 'naked_triples', 'hidden_triples'])
