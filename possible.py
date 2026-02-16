@@ -109,7 +109,7 @@ def hidden_singles(puzzle, possible):
                 
     return possible
 
-# naked pairs: take every combo and find candidate pairs, then remove those values from other cells in same row, col, box
+# naked pairs: take every combo and find candidate pairs, then remove those 2 values from other cells in same row, col, box
 def naked_pairs(puzzle, possible):
 
     for combo in COMBOS:
@@ -159,29 +159,30 @@ def hidden_pairs(puzzle, possible):
 
     return possible
 
-# naked triples: take every combo and find candidate triples, then remove those values from other cells in same row, col, box
+# naked triples: take every combo and find candidate triples, then remove those 3 values from other cells in same row, col, box
 def naked_triples(puzzle, possible):
 
     for combo in COMBOS:
 
-        # find cells with 3 possible numbers
-        triple_map = dd(list)
-        for i in combo:
-            if len(possible[i]) == 3:
-                triple_map[tuple(sorted(possible[i]))].append(i)
+        # find cells that have at most three numbers
+        candidate_cells = [i for i in combo if puzzle[i] == 0 and 1 <= len(possible[i]) <= 3]
 
         # find a triple of these numbers
-        for triple, cells in triple_map.items():
-            if len(cells) == 3:
+        for cells in itertools.combinations(candidate_cells, 3):
+            triple_vals = set().union(*(possible[i] for i in cells))
+            if len(triple_vals) == 3:
 
                 # remove triple from all other cells in the combo
-                for i in combo:
+                for i in combo: 
                     if i in cells or puzzle[i] != 0:
                         continue
-                    else:
-                        possible[i] = possible[i] - set(triple)
+
+                    new_possible = possible[i] - triple_vals
+                    if possible[i] != new_possible:
+                        possible[i] = new_possible
 
     return possible
+
 
 # hidden triples: take every combo and find a triple that can only be in the same 3 cells, then remove all other values from those cells
 def hidden_triples(puzzle, possible):
@@ -192,15 +193,16 @@ def hidden_triples(puzzle, possible):
         value_map = {i: [j for j in combo if puzzle[j] == 0 and i in possible[j]] for i in TARGET}
 
         # check every triple of numbers
-        for nums in itertools.combinations(TARGET, 3):
-            cells = value_map[nums[0]]
+        for i, j, k in itertools.combinations(TARGET, 3):
+            triple_cells = set(value_map[i]) | set(value_map[j]) | set(value_map[k])
 
-            # check if all 3 numbers have the same cells and there are exactly 3 cells
-            if all(value_map[n] == cells for n in nums) and len(cells) == 3:
-                triple = set(nums)
-
+            # check if it is a hidden triple
+            if len(triple_cells) == 3 and all(len(value_map[x]) > 0 for x in (i, j, k)):
+                
                 # remove all other numbers from the triple cells
-                for cell in cells:
-                    possible[cell] = possible[cell] & triple
+                for cell in triple_cells:
+                    new_possible = possible[cell] & {i, j, k}
+                    if possible[cell] != new_possible:
+                        possible[cell] = new_possible
 
     return possible
