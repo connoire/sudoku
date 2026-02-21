@@ -183,7 +183,6 @@ def naked_triples(puzzle, possible):
 
     return possible
 
-
 # hidden triples: take every combo and find a triple that can only be in the same 3 cells, then remove all other values from those cells
 def hidden_triples(puzzle, possible):
 
@@ -202,6 +201,53 @@ def hidden_triples(puzzle, possible):
                 # remove all other numbers from the triple cells
                 for cell in triple_cells:
                     new_possible = possible[cell] & {i, j, k}
+                    if possible[cell] != new_possible:
+                        possible[cell] = new_possible
+
+    return possible
+
+# naked quads: take every combo and find candidate quads, then remove those 4 values from other cells in same row, col, box
+def naked_quads(puzzle, possible):
+
+    for combo in COMBOS:
+
+        # find cells that have at most four numbers
+        candidate_cells = [i for i in combo if puzzle[i] == 0 and 1 <= len(possible[i]) <= 4]
+
+        # find a quad of these numbers
+        for cells in itertools.combinations(candidate_cells, 4):
+            quad_vals = set().union(*(possible[i] for i in cells))
+            if len(quad_vals) == 4:
+
+                # remove quad from all other cells in the combo
+                for i in combo: 
+                    if i in cells or puzzle[i] != 0:
+                        continue
+
+                    new_possible = possible[i] - quad_vals
+                    if possible[i] != new_possible:
+                        possible[i] = new_possible
+
+    return possible
+
+# hidden quads: take every combo and find a quad that can only be in the same 4 cells, then remove all other values from those cells
+def hidden_quads(puzzle, possible):
+
+    for combo in COMBOS:
+
+        # find what cells each number can be in
+        value_map = {i: [j for j in combo if puzzle[j] == 0 and i in possible[j]] for i in TARGET}
+
+        # check every quad of numbers
+        for i, j, k, l in itertools.combinations(TARGET, 4):
+            quad_cells = set(value_map[i]) | set(value_map[j]) | set(value_map[k]) | set(value_map[l])
+
+            # check if it is a hidden quad
+            if len(quad_cells) == 4 and all(len(value_map[x]) > 0 for x in (i, j, k, l)):
+                
+                # remove all other numbers from the quad cells
+                for cell in quad_cells:
+                    new_possible = possible[cell] & {i, j, k, l}
                     if possible[cell] != new_possible:
                         possible[cell] = new_possible
 
